@@ -21,7 +21,7 @@ st.sidebar.info("💡 支持同时调整自营/X/BPO三种用工模式")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 说明")
 st.sidebar.markdown("""
-- 先设置基线数据
+- 先设置各部门基线数据
 - 再调整各子部门不同用工模式的人力和量级
 - 点击「开始测算」查看结果
 - 支持实时更新测算
@@ -29,56 +29,51 @@ st.sidebar.markdown("""
 """)
 
 # ==========================================
-# 第一步：设置基线数据
+# 第一步：设置各部门基线数据
 # ==========================================
 
-st.header("📋 第一步：设置基线数据")
+st.header("📋 第一步：设置各部门基线数据")
+
+# 部门列表
+departments = [
+    "抖音开放平台生态运营",
+    "短剧生态运营",
+    "游戏与社交生态运营"
+]
 
 # 初始化session state中的基线数据
-if 'base_data' not in st.session_state:
-    # 默认基线数据
-    st.session_state.base_data = {
-        "抖音开放平台生态运营": {
-            "自营": {"人力": 100, "成本": 54281, "量级": 35125},
-            "X": {"人力": 100, "成本": 54281, "量级": 35125},
-            "BPO": {"人力": 106, "成本": 57537, "量级": 35125}
-        },
-        "短剧生态运营": {
-            "自营": {"人力": 19, "成本": 8337, "量级": 8132},
-            "X": {"人力": 19, "成本": 8337, "量级": 8132},
-            "BPO": {"人力": 19, "成本": 8338, "量级": 8131}
-        },
-        "游戏与社交生态运营": {
-            "自营": {"人力": 158, "成本": 73626, "量级": 60120},
-            "X": {"人力": 158, "成本": 73626, "量级": 60120},
-            "BPO": {"人力": 158, "成本": 73627, "量级": 60121}
+for dept in departments:
+    if dept not in st.session_state:
+        st.session_state[dept] = {
+            "自营": {"人力": 0, "成本": 0, "量级": 0},
+            "X": {"人力": 0, "成本": 0, "量级": 0},
+            "BPO": {"人力": 0, "成本": 0, "量级": 0}
         }
-    }
 
-# 显示基线数据设置界面
-for dept in st.session_state.base_data.keys():
-    with st.expander(f"📊 {dept} - 基线数据", expanded=False):
+# 显示每个部门的基线数据设置界面
+for dept in departments:
+    with st.expander(f"📊 {dept} - 基线数据", expanded=True):
         col1, col2, col3 = st.columns(3)
-        
+
         for idx, mode in enumerate(["自营", "X", "BPO"]):
             with [col1, col2, col3][idx]:
                 st.markdown(f"**{mode}**")
-                st.session_state.base_data[dept][mode]["人力"] = st.number_input(
-                    f"{mode}人力", 
-                    min_value=0, 
-                    value=st.session_state.base_data[dept][mode]["人力"],
+                st.session_state[dept][mode]["人力"] = st.number_input(
+                    f"{mode}人力",
+                    min_value=0,
+                    value=st.session_state[dept][mode]["人力"],
                     key=f"base_{dept}_{mode}_人力"
                 )
-                st.session_state.base_data[dept][mode]["成本"] = st.number_input(
-                    f"{mode}成本（万元）", 
-                    min_value=0, 
-                    value=st.session_state.base_data[dept][mode]["成本"],
+                st.session_state[dept][mode]["成本"] = st.number_input(
+                    f"{mode}成本（万元）",
+                    min_value=0,
+                    value=st.session_state[dept][mode]["成本"],
                     key=f"base_{dept}_{mode}_成本"
                 )
-                st.session_state.base_data[dept][mode]["量级"] = st.number_input(
-                    f"{mode}量级", 
-                    min_value=0, 
-                    value=st.session_state.base_data[dept][mode]["量级"],
+                st.session_state[dept][mode]["量级"] = st.number_input(
+                    f"{mode}量级",
+                    min_value=0,
+                    value=st.session_state[dept][mode]["量级"],
                     key=f"base_{dept}_{mode}_量级"
                 )
 
@@ -94,7 +89,7 @@ st.header("📊 第二步：调整参数")
 adjustments = {}
 
 # 遍历每个子部门
-for dept in st.session_state.base_data.keys():
+for dept in departments:
     st.subheader(f"🎯 {dept}")
     adjustments[dept] = {}
 
@@ -105,15 +100,15 @@ for dept in st.session_state.base_data.keys():
         st.markdown("**自营**")
         adjustments[dept]["自营"] = {
             "人力": st.number_input(
-                "自营人力", 
-                min_value=0, 
-                value=st.session_state.base_data[dept]["自营"]["人力"],
+                "自营人力",
+                min_value=0,
+                value=st.session_state[dept]["自营"]["人力"],
                 key=f"{dept}_自营_人力"
             ),
             "量级": st.number_input(
-                "自营量级", 
-                min_value=0, 
-                value=st.session_state.base_data[dept]["自营"]["量级"],
+                "自营量级",
+                min_value=0,
+                value=st.session_state[dept]["自营"]["量级"],
                 key=f"{dept}_自营_量级"
             )
         }
@@ -122,15 +117,15 @@ for dept in st.session_state.base_data.keys():
         st.markdown("**X**")
         adjustments[dept]["X"] = {
             "人力": st.number_input(
-                "X人力", 
-                min_value=0, 
-                value=st.session_state.base_data[dept]["X"]["人力"],
+                "X人力",
+                min_value=0,
+                value=st.session_state[dept]["X"]["人力"],
                 key=f"{dept}_X_人力"
             ),
             "量级": st.number_input(
-                "X量级", 
-                min_value=0, 
-                value=st.session_state.base_data[dept]["X"]["量级"],
+                "X量级",
+                min_value=0,
+                value=st.session_state[dept]["X"]["量级"],
                 key=f"{dept}_X_量级"
             )
         }
@@ -139,15 +134,15 @@ for dept in st.session_state.base_data.keys():
         st.markdown("**BPO**")
         adjustments[dept]["BPO"] = {
             "人力": st.number_input(
-                "BPO人力", 
-                min_value=0, 
-                value=st.session_state.base_data[dept]["BPO"]["人力"],
+                "BPO人力",
+                min_value=0,
+                value=st.session_state[dept]["BPO"]["人力"],
                 key=f"{dept}_BPO_人力"
             ),
             "量级": st.number_input(
-                "BPO量级", 
-                min_value=0, 
-                value=st.session_state.base_data[dept]["BPO"]["量级"],
+                "BPO量级",
+                min_value=0,
+                value=st.session_state[dept]["BPO"]["量级"],
                 key=f"{dept}_BPO_量级"
             )
         }
@@ -165,7 +160,7 @@ if st.button("🧮 开始测算", type="primary"):
     total_dept_volume = 0
 
     # 遍历每个子部门
-    for dept in st.session_state.base_data.keys():
+    for dept in departments:
         st.subheader(f"📊 {dept}")
 
         dept_results = {}
@@ -177,7 +172,7 @@ if st.button("🧮 开始测算", type="primary"):
 
         for idx, mode in enumerate(["自营", "X", "BPO"]):
             # 计算该模式的成本
-            old_data = st.session_state.base_data[dept][mode]
+            old_data = st.session_state[dept][mode]
             new_data = adjustments[dept][mode]
 
             # 计算人均成本
@@ -239,8 +234,8 @@ if st.button("🧮 开始测算", type="primary"):
         st.markdown(f"**📌 {dept} 汇总**")
 
         # 计算旧的汇总数据
-        old_dept_cost = sum(st.session_state.base_data[dept][mode]["成本"] for mode in ["自营", "X", "BPO"])
-        old_dept_volume = sum(st.session_state.base_data[dept][mode]["量级"] for mode in ["自营", "X", "BPO"])
+        old_dept_cost = sum(st.session_state[dept][mode]["成本"] for mode in ["自营", "X", "BPO"])
+        old_dept_volume = sum(st.session_state[dept][mode]["量级"] for mode in ["自营", "X", "BPO"])
 
         if old_dept_volume > 0:
             old_dept_wancase = (old_dept_cost / old_dept_volume) * 10000
@@ -279,9 +274,9 @@ if st.button("🧮 开始测算", type="primary"):
     # 计算旧的汇总数据
     old_total_cost = 0
     old_total_volume = 0
-    for dept in st.session_state.base_data.keys():
-        old_total_cost += sum(st.session_state.base_data[dept][mode]["成本"] for mode in ["自营", "X", "BPO"])
-        old_total_volume += sum(st.session_state.base_data[dept][mode]["量级"] for mode in ["自营", "X", "BPO"])
+    for dept in departments:
+        old_total_cost += sum(st.session_state[dept][mode]["成本"] for mode in ["自营", "X", "BPO"])
+        old_total_volume += sum(st.session_state[dept][mode]["量级"] for mode in ["自营", "X", "BPO"])
 
     if old_total_volume > 0:
         old_total_wancase = (old_total_cost / old_total_volume) * 10000
@@ -308,4 +303,4 @@ if st.button("🧮 开始测算", type="primary"):
         st.metric("万Case成本", f"{new_total_wancase:,.0f} 元", f"{total_cost_change:+.1f}%")
 
 st.markdown("---")
-st.caption("🦐 虾滑团团出品 | 万Case成本计算器 v3.0 | 基线可设置 + 用工模式拆分 + 三级部门汇总")
+st.caption("🦐 虾滑团团出品 | 万Case成本计算器 v4.0 | 各部门单独基线 + 用工模式拆分 + 三级部门汇总")
