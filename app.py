@@ -21,7 +21,7 @@ st.sidebar.info("💡 支持同时调整自营/X/BPO三种用工模式")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 说明")
 st.sidebar.markdown("""
-- 先设置基线数据（1月数据）
+- 先设置基线数据
 - 再调整各子部门不同用工模式的人力和量级
 - 点击「开始测算」查看结果
 - 支持实时更新测算
