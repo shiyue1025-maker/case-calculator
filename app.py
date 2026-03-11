@@ -15,8 +15,22 @@ st.set_page_config(
 st.title("🦐 万Case成本计算器 🦐")
 st.markdown("---")
 
+# 侧边栏 - 目录导航
+st.sidebar.header("📋 目录导航")
+
+# 部门列表
+departments = [
+    "抖音开放平台生态运营",
+    "短剧生态运营",
+    "游戏与社交生态运营",
+    "总的测算"
+]
+
+# 侧边栏的单选按钮
+selected_page = st.sidebar.radio("选择查看内容", departments)
+
 # 侧边栏 - 用工模式说明
-st.sidebar.header("用工模式设置")
+st.sidebar.markdown("---")
 st.sidebar.info("💡 支持同时调整自营/X/BPO三种用工模式")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 说明")
@@ -34,15 +48,8 @@ st.sidebar.markdown("""
 
 st.header("📋 第一步：设置各部门基线数据")
 
-# 部门列表
-departments = [
-    "抖音开放平台生态运营",
-    "短剧生态运营",
-    "游戏与社交生态运营"
-]
-
 # 初始化session state中的基线数据
-for dept in departments:
+for dept in departments[:3]:
     if dept not in st.session_state:
         st.session_state[dept] = {
             "自营": {"人力": 0, "成本": 0, "量级": 0},
@@ -51,7 +58,7 @@ for dept in departments:
         }
 
 # 显示每个部门的基线数据设置界面
-for dept in departments:
+for dept in departments[:3]:
     with st.expander(f"📊 {dept} - 基线数据", expanded=True):
         col1, col2, col3 = st.columns(3)
 
@@ -89,7 +96,7 @@ st.header("📊 第二步：调整参数")
 adjustments = {}
 
 # 遍历每个子部门
-for dept in departments:
+for dept in departments[:3]:
     st.subheader(f"🎯 {dept}")
     adjustments[dept] = {}
 
@@ -157,7 +164,7 @@ if st.button("🧮 开始测算", type="primary"):
     total_dept_volume = 0
     all_dept_results = {}
 
-    for dept in departments:
+    for dept in departments[:3]:
         dept_results = {}
         dept_total_cost = 0
         dept_total_volume = 0
@@ -245,7 +252,7 @@ if st.button("🧮 开始测算", type="primary"):
     # 计算总的汇总
     old_total_cost = 0
     old_total_volume = 0
-    for dept in departments:
+    for dept in departments[:3]:
         old_total_cost += sum(st.session_state[dept][mode]["成本"] for mode in ["自营", "X", "BPO"])
         old_total_volume += sum(st.session_state[dept][mode]["量级"] for mode in ["自营", "X", "BPO"])
 
@@ -277,19 +284,15 @@ if st.button("🧮 开始测算", type="primary"):
     }
 
 # ==========================================
-# 第三步：显示结果（带目录切换）
+# 第三步：显示结果（根据侧边栏选择）
 # ==========================================
 
 if 'all_dept_results' in st.session_state and 'total_result' in st.session_state:
     st.header("📈 测算结果")
 
-    # 目录切换
-    tab_options = departments + ["总的测算"]
-    selected_tab = st.radio("选择查看部门", tab_options, horizontal=True)
-
-    if selected_tab in departments:
+    if selected_page in departments[:3]:
         # 显示单个部门
-        dept = selected_tab
+        dept = selected_page
         dept_data = st.session_state.all_dept_results[dept]
 
         st.subheader(f"📊 {dept}")
@@ -333,4 +336,4 @@ if 'all_dept_results' in st.session_state and 'total_result' in st.session_state
             st.metric("万Case成本", f"{total_data['new_total_wancase']:,.0f} 元", f"{total_data['total_cost_change']:+.1f}%")
 
 st.markdown("---")
-st.caption("🦐 虾滑团团出品 | 万Case成本计算器 v5.0 | 目录切换 + 各部门单独基线 + 用工模式拆分 + 三级部门汇总")
+st.caption("🦐 虾滑团团出品 | 万Case成本计算器 v6.0 | 侧边栏目录切换 + 各部门单独基线 + 用工模式拆分 + 三级部门汇总")
