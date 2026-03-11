@@ -32,7 +32,7 @@ st.sidebar.markdown("""
 # 第一步：设置基线数据
 # ==========================================
 
-st.header("📋 第一步：设置基线数据（1月）")
+st.header("📋 第一步：设置基线数据")
 
 # 初始化session state中的基线数据
 if 'base_data' not in st.session_state:
