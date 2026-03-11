@@ -152,30 +152,20 @@ for dept in departments:
 # 测算按钮
 st.markdown("---")
 if st.button("🧮 开始测算", type="primary"):
-    st.header("📈 测算结果")
-
-    # 存储结果
-    results = {}
+    # 先计算总的结果，保存到session state
     total_dept_cost = 0
     total_dept_volume = 0
+    all_dept_results = {}
 
-    # 遍历每个子部门
     for dept in departments:
-        st.subheader(f"📊 {dept}")
-
         dept_results = {}
         dept_total_cost = 0
         dept_total_volume = 0
 
-        # 显示三种用工模式的结果
-        col1, col2, col3 = st.columns(3)
-
         for idx, mode in enumerate(["自营", "X", "BPO"]):
-            # 计算该模式的成本
             old_data = st.session_state[dept][mode]
             new_data = adjustments[dept][mode]
 
-            # 计算人均成本
             if old_data["人力"] > 0:
                 per_capita_cost = old_data["成本"] / old_data["人力"]
             else:
@@ -187,7 +177,6 @@ if st.button("🧮 开始测算", type="primary"):
             old_volume = old_data["量级"]
             new_volume = new_data["量级"]
 
-            # 计算万Case成本
             if old_volume > 0:
                 old_wancase = (old_cost / old_volume) * 10000
             else:
@@ -198,14 +187,12 @@ if st.button("🧮 开始测算", type="primary"):
             else:
                 new_wancase = 0
 
-            # 计算变动
             labor_diff = new_data["人力"] - old_data["人力"]
             if old_wancase > 0:
                 cost_change = ((new_wancase - old_wancase) / old_wancase) * 100
             else:
                 cost_change = 0
 
-            # 存储结果
             dept_results[mode] = {
                 "旧人力": old_data["人力"],
                 "新人力": new_data["人力"],
@@ -214,26 +201,15 @@ if st.button("🧮 开始测算", type="primary"):
                 "旧量级": old_volume,
                 "新量级": new_volume,
                 "旧万Case成本": old_wancase,
-                "新万Case成本": new_wancase
+                "新万Case成本": new_wancase,
+                "人力变动": labor_diff,
+                "成本变动": cost_change
             }
 
-            # 累加部门总量
             dept_total_cost += new_cost
             dept_total_volume += new_volume
 
-            # 显示该模式结果
-            with [col1, col2, col3][idx]:
-                st.markdown(f"**{mode}**")
-                st.metric("人力", f"{new_data['人力']} 人", f"{labor_diff:+d}")
-                st.metric("万Case成本", f"{new_wancase:,.0f} 元", f"{cost_change:+.1f}%")
-                st.write(f"成本: {old_cost:,.0f} → {new_cost:,.0f} 万元")
-                st.write(f"量级: {old_volume:,} → {new_volume:,}")
-
-        # 显示子部门汇总
-        st.markdown("---")
-        st.markdown(f"**📌 {dept} 汇总**")
-
-        # 计算旧的汇总数据
+        # 计算该部门汇总
         old_dept_cost = sum(st.session_state[dept][mode]["成本"] for mode in ["自营", "X", "BPO"])
         old_dept_volume = sum(st.session_state[dept][mode]["量级"] for mode in ["自营", "X", "BPO"])
 
@@ -252,26 +228,21 @@ if st.button("🧮 开始测算", type="primary"):
         else:
             dept_cost_change = 0
 
-        # 显示子部门汇总结果
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("总成本", f"{dept_total_cost:,.0f} 万元", f"{dept_total_cost - old_dept_cost:+,.0f}")
-        with col2:
-            st.metric("总量级", f"{dept_total_volume:,}", f"{dept_total_volume - old_dept_volume:+,}")
-        with col3:
-            st.metric("万Case成本", f"{new_dept_wancase:,.0f} 元", f"{dept_cost_change:+.1f}%")
+        all_dept_results[dept] = {
+            "mode_results": dept_results,
+            "dept_total_cost": dept_total_cost,
+            "dept_total_volume": dept_total_volume,
+            "old_dept_cost": old_dept_cost,
+            "old_dept_volume": old_dept_volume,
+            "old_dept_wancase": old_dept_wancase,
+            "new_dept_wancase": new_dept_wancase,
+            "dept_cost_change": dept_cost_change
+        }
 
-        # 累加到三级部门总量
         total_dept_cost += dept_total_cost
         total_dept_volume += dept_total_volume
 
-        st.markdown("---")
-        st.markdown("---")
-
-    # 显示三级部门（开发者生态）汇总
-    st.header("🎯 三级部门：开发者生态 汇总")
-
-    # 计算旧的汇总数据
+    # 计算总的汇总
     old_total_cost = 0
     old_total_volume = 0
     for dept in departments:
@@ -293,14 +264,73 @@ if st.button("🧮 开始测算", type="primary"):
     else:
         total_cost_change = 0
 
-    # 显示三级部门汇总结果
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("总成本", f"{total_dept_cost:,.0f} 万元", f"{total_dept_cost - old_total_cost:+,.0f}")
-    with col2:
-        st.metric("总量级", f"{total_dept_volume:,}", f"{total_dept_volume - old_total_volume:+,}")
-    with col3:
-        st.metric("万Case成本", f"{new_total_wancase:,.0f} 元", f"{total_cost_change:+.1f}%")
+    # 保存到session state
+    st.session_state.all_dept_results = all_dept_results
+    st.session_state.total_result = {
+        "total_dept_cost": total_dept_cost,
+        "total_dept_volume": total_dept_volume,
+        "old_total_cost": old_total_cost,
+        "old_total_volume": old_total_volume,
+        "old_total_wancase": old_total_wancase,
+        "new_total_wancase": new_total_wancase,
+        "total_cost_change": total_cost_change
+    }
+
+# ==========================================
+# 第三步：显示结果（带目录切换）
+# ==========================================
+
+if 'all_dept_results' in st.session_state and 'total_result' in st.session_state:
+    st.header("📈 测算结果")
+
+    # 目录切换
+    tab_options = departments + ["总的测算"]
+    selected_tab = st.radio("选择查看部门", tab_options, horizontal=True)
+
+    if selected_tab in departments:
+        # 显示单个部门
+        dept = selected_tab
+        dept_data = st.session_state.all_dept_results[dept]
+
+        st.subheader(f"📊 {dept}")
+
+        # 显示三种用工模式的结果
+        col1, col2, col3 = st.columns(3)
+
+        for idx, mode in enumerate(["自营", "X", "BPO"]):
+            mode_data = dept_data["mode_results"][mode]
+            with [col1, col2, col3][idx]:
+                st.markdown(f"**{mode}**")
+                st.metric("人力", f"{mode_data['新人力']} 人", f"{mode_data['人力变动']:+d}")
+                st.metric("万Case成本", f"{mode_data['新万Case成本']:,.0f} 元", f"{mode_data['成本变动']:+.1f}%")
+                st.write(f"成本: {mode_data['旧成本']:,.0f} → {mode_data['新成本']:,.0f} 万元")
+                st.write(f"量级: {mode_data['旧量级']:,} → {mode_data['新量级']:,}")
+
+        # 显示该部门汇总
+        st.markdown("---")
+        st.markdown(f"**📌 {dept} 汇总**")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("总成本", f"{dept_data['dept_total_cost']:,.0f} 万元", f"{dept_data['dept_total_cost'] - dept_data['old_dept_cost']:+,.0f}")
+        with col2:
+            st.metric("总量级", f"{dept_data['dept_total_volume']:,}", f"{dept_data['dept_total_volume'] - dept_data['old_dept_volume']:+,}")
+        with col3:
+            st.metric("万Case成本", f"{dept_data['new_dept_wancase']:,.0f} 元", f"{dept_data['dept_cost_change']:+.1f}%")
+
+    else:
+        # 显示总的测算
+        st.header("🎯 三级部门：开发者生态 汇总")
+
+        total_data = st.session_state.total_result
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("总成本", f"{total_data['total_dept_cost']:,.0f} 万元", f"{total_data['total_dept_cost'] - total_data['old_total_cost']:+,.0f}")
+        with col2:
+            st.metric("总量级", f"{total_data['total_dept_volume']:,}", f"{total_data['total_dept_volume'] - total_data['old_total_volume']:+,}")
+        with col3:
+            st.metric("万Case成本", f"{total_data['new_total_wancase']:,.0f} 元", f"{total_data['total_cost_change']:+.1f}%")
 
 st.markdown("---")
-st.caption("🦐 虾滑团团出品 | 万Case成本计算器 v4.0 | 各部门单独基线 + 用工模式拆分 + 三级部门汇总")
+st.caption("🦐 虾滑团团出品 | 万Case成本计算器 v5.0 | 目录切换 + 各部门单独基线 + 用工模式拆分 + 三级部门汇总")
